@@ -1,0 +1,326 @@
+:root {
+    --red: #d35266;
+    --gray: #888;
+    --dark-gray: #383838;
+}
+
+.bg-color-light {
+    background-color: #f4f4f4;
+}
+
+.color-dark-gray {
+    color: var(--dark-gray);
+}
+
+.color-gray {
+    color: var(--gray);
+}
+
+.color-red {
+    color: var(--red);
+}
+
+.border-bottom-gray,
+.border-bottom-gray-sm {
+    border-bottom: 1px solid var(--gray);
+}
+
+.border-right-gray {
+    border-right: 1px solid var(--gray);
+}
+
+.font-size-menu {
+    font-size: 0.9em;
+}
+
+.font-size-date {
+    font-size: 0.8em;
+}
+
+.type-width {
+    width: 35%;
+}
+
+.item-search-wrapper {
+    min-width: 360px;
+}
+
+.item-price-buy {
+    border-radius: 2px;
+    color: white;
+    background-color: var(--red);
+    padding: 0.5em;
+}
+
+.menu-list-active {
+    border-radius: 2px;
+    color: white;
+    background-color: var(--red);
+    padding: 0.25em 0.5em;
+}
+
+.item-price-buy:hover,
+.menu-list-active:hover {
+    text-decoration: none;
+    color: var(--dark-gray);
+    cursor: pointer;
+}
+
+.item-search-unique:hover {
+    background-color: white;
+}
+
+.give-call-button {
+    display: none;
+}
+
+.item-search-unique:hover .give-call-button {
+    display: inline;
+}
+
+.padding-right-md {
+    padding-right: 0;
+}
+
+.menu-list-number {
+    border-radius: 2px;
+    color: var(--gray);
+    padding: 0.25em 0.5em;
+    background-color: white;
+}
+
+.menu-list-number:hover {
+    text-decoration: none;
+    color: var(--red);
+    cursor: pointer;
+}
+
+.filters-container {
+    padding-left: 3em;
+
+}
+
+@media (min-width: 576px) {
+    .filters-container {
+        padding-left: 1.5em;
+        padding-right: 1.5em;
+    }
+}
+
+@media (min-width: 768px) {
+    .border-right-gray-md {
+        border-right: 1px solid var(--gray);
+    }
+
+    .border-bottom-gray-md {
+        border-bottom: 1px solid var(--gray);
+    }
+
+    .border-bottom-gray-sm {
+        border-bottom: none;
+    }
+
+    .padding-right-md {
+        padding-right: 15px;
+    }
+
+    .filters-container {
+        padding-left: 3em;
+        padding-right: 15px;
+    }
+
+    .slider {
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+
+    .slider-labels {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .input-lower,
+    .input-upper {
+        width: 70px;
+        padding: 5px;
+        margin: 0 5px;
+        text-align: center;
+    }
+
+    /* Стили для noUiSlider */
+    .slider {
+        margin: 20px 0;
+    }
+
+    /* Change the main track color */
+    .noUi-base {
+        background-color: #ddd; /* Gray track */
+    }
+
+    /* Change the color of the handle/knob */
+    .noUi-handle {
+        background-color: #999999; /* Darker handle */
+        border-color: #000000;
+    }
+
+    /* Change the color of the selection range */
+    .noUi-connect {
+        background: #111111; /* Bright orange range */
+    }
+
+
+    .custom-checkboxes {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .custom-checkbox {
+        display: flex;
+        align-items: center;
+        /* Центрирование чекбокса и текста по вертикали */
+        cursor: pointer;
+        position: relative;
+        padding-left: 35px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        font-size: 18px;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+    /* Стили для чекбокса */
+    .custom-checkbox input {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        height: 0;
+        width: 0;
+
+    }
+
+    /* Квадратик для чекбокса */
+    .custom-checkbox input:checked ~ .checkmark {
+        background-color: #2196F3;
+    }
+
+    /* Стиль для галочки (когда чекбокс выбран) */
+    .custom-checkbox input:checked ~ .checkmark:after {
+        display: block;
+    }
+
+    /* Стиль галочки */
+    .custom-checkbox .checkmark:after {
+        left: 9px;
+        top: 5px;
+        width: 5px;
+        height: 10px;
+        border: solid white;
+        border-width: 0 3px 3px 0;
+        -webkit-transform: rotate(45deg);
+        -ms-transform: rotate(45deg);
+        transform: rotate(45deg);
+    }
+
+    .custom-filter-width {
+        max-width: 400px; /* Example width */
+
+    }
+
+
+    .product-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+        width: 300px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin: 10px;
+        margin-right: 15px; /* или другое значение, которое подходит */
+        margin-left: 15px;
+    }
+
+    .custom-gutter-row {
+        margin-right: -120px;
+        margin-left: -15px;
+    }
+
+    .custom-gutter-row > [class*='col-'] {
+        padding-right: 15px;
+        padding-left: 15px;
+    }
+
+
+    .product-image {
+        width: 100%;
+        height: 300px;
+        object-fit: cover;
+    }
+
+    .product-info {
+        padding: 15px;
+    }
+
+    .product-title {
+        font-size: 1.2em;
+        margin: 40px 0;
+    }
+
+    .product-description {
+        font-size: 0.9em;
+        color: #666;
+    }
+
+    .add-to-cart-btn {
+        background-color: var(--red);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .add-to-cart-btn:hover {
+        background-color: darken(var(--red), 10%);
+    }
+
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 20px 0;
+    }
+
+    .page-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px;
+    }
+
+    .page-count {
+        font-size: 1.2em;
+    }
+
+    .arrow {
+        border: solid black;
+        border-width: 0 3px 3px 0;
+        display: inline-block;
+        padding: 3px;
+    }
+
+    .left {
+        transform: rotate(135deg);
+    }
+
+    .right {
+        transform: rotate(-45deg);
+    }
+
+
+}

@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../static/css/reset.css">
+    <link rel="stylesheet" type="text/css" href="../static/css/style.css">
+    <script src="https://kit.fontawesome.com/b9edfb7622.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.10/vue.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.5/axios.js"></script>
+    <title>Mix</title>
+</head>
+
+<body>
+{%verbatim %}
+<!-- HEADER -->
+<div class="container-fluid header-wrapper sticky-top" id="auth">
+    <header class=" container-fluid container-lg">
+        <nav class="nav-flexbox flex-space-between-custom display-flex-custom flex-center-custom">
+            <div class="d-flex align-items-center flex-nowrap">
+                <div class="brand-logo display-flex-custom flex-center-custom">
+                    <div class="logo-img display-flex-custom flex-center-custom">
+                        <img class="logo-image" src="../static/img/MIX_LOGO3Зpng.png" alt="logo-img">
+                        <a class="nav-user-link flex-container"
+                           href="https://2gis.kz/almaty/inside/9430047375048660/firm/70000001050261708?m=76.910666%2C43.225079%2F16"
+                           target="_blank">
+                            <img src="../static/img/icons8-home-50.png" alt="home-icon" width="25" height="25">
+                            <span>&nbsp;Тимирязева 42 ТЦ Галерея</span>
+                        </a>
+                        <a class="nav-user-link phone-number flex-container" href="tel:+77017124804">
+                            <img src="../static/img/icons8-phone-50.png" alt="phone-icon" width="25" height="25">
+                            <span>&nbsp;8 701 712 48 04</span>
+                        </a>
+                    </div>
+                </div>
+
+
+            </div>
+            <div class="login-info flex-center-custom display-flex-custom d-none d-md-flex h-medium-font">
+                <a class="nav-hd-link h-medium-font text-nowrap" href="http://127.0.0.1:8000/userItems.html">
+                    <i class="fas fa-shopping-cart fa-lg"></i>&nbsp;&nbsp;CART
+                </a>
+                <div class="login-info flex-center-custom display-flex-custom d-none d-md-flex h-medium-font">
+                    <!-- Login/Register Form -->
+                    <form v-if="!isLoggedIn" class="nav-hd-link h-medium-font text-nowrap" @submit.prevent="login">
+                        <input type="text" placeholder="Username" v-model="username" required>
+                        <input type="password" placeholder="Password" v-model="password" required>
+                        <button type="button" @click="login">Log In</button>
+                        <button type="button" @click="register">Register</button>
+                    </form>
+
+                    <!-- Logged In User Info -->
+                    <div v-else class="user-info">
+                        <span>{{ username }}</span>
+                        <button type="button" @click="logout">Log Out</button>
+                    </div>
+                </div>
+
+                <!--?                <img src="../static/img/user.png" alt="user-icon" width="35" height="35">-->
+            </div>
+        </nav>
+    </header>
+</div>
+{% endverbatim %}
+
+<!-- MAIN SEARCH -->
+<main class="mb-4">
+    <div class="container-fluid search-div d-flex flex-column justify-content-center align-items-center">
+        <form class="form-search d-flex" action="search.html">
+            <input class="search-input" type="text" placeholder="What do you look for...">
+            <button class="button-search" type="submit">Search</button>
+        </form>
+    </div>
+</main>
+
+<!-- Category Section -->
+<section class="container my-4">
+    <h2 class="text-center mb-3">Категории</h2>
+    <div class="row" id="category">
+        <div class="col-md-4 col-sm-6 mb-3">
+            <a href="search.html/?category=Jeans">
+                <div class="category-item">
+                    <img src="../static/img/icons8-jeans-50.png" alt="jeans-icon" width="32" height="32">
+                    Джинсы
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-3">
+            <a href="search.html/?category=Pantsuits">
+                <div class="category-item">
+                    <img src="../static/img/icons8-blazer-32.png" alt="blazer-icon">
+                    <img src="../static/img/icons8-jeans-50.png" alt="jeans-icon" width="32" height="32">
+                    Брючные костюмы
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-3">
+            <a href="search.html/?category=Shorts">
+                <div class="category-item">
+                    <img src="../static/img/icons8-shorts-50.png" alt="shorts-icon" width="32" height="32">
+                    Шорты
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-3">
+            <a href="search.html/?category=Skirts">
+                <div class="category-item">
+                    <img src="../static/img/icons8-skirt-50.png" alt="skirt-icon" width="32" height="32">
+                    Юбки
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-3">
+            <a href="search.html/?category=Overalls">
+                <div class="category-item">
+                    <img src="../static/img/icons8-overalls-60.png" alt="over-icon" width="32" height="32">
+                    Комбинезоны
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-3">
+            <a href="search.html/?category=Blazer">
+                <div class="category-item">
+                    <img src="../static/img/icons8-blazer-32.png" alt="blazer-icon">
+                    Куртки
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-3">
+            <a href="search.html/?category=Cloaks">
+                <div class="category-item">
+                    <img src="../static/img/icons8-cloak-64.png" alt="cloak-icon" width="32" height="32">
+                    Плащи
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-3">
+            <a href="search.html/?category=Cardigans">
+                <div class="category-item">
+                    <img src="../static/img/icons8-cardigan-60.png" alt="cardigan-icon" width="32" height="32">
+                    Кардиганы
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-3">
+            <a href="search.html/?category=Dress">
+                <div class="category-item">
+                    <img src="../static/img/icons8-dress-32.png" alt="dress-icon">
+                    Платья
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-3">
+            <a href="search.html/?category=Ironed">
+                <div class="category-item">
+                    <img src="../static/img/icons8-ironed-64.png" alt="shirt-icon" width="32" height="32">
+                    Рубашки и блузки
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-3">
+            <a href="search.html/?category=Pants">
+                <div class="category-item">
+                    <img src="../static/img/icons8-blazer-32.png" alt="blazer-icon">
+                    Пиджаки
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-3">
+            <a href="search.html/?category=T-Shirt">
+                <div class="category-item">
+                    <img src="../static/img/icons8-t-shirt-50.png" alt="t-shirt-icon" width="32" height="32">
+                    Футболки и топы
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-3">
+            <a href="search.html/?category=Pants">
+                <div class="category-item">
+                    <img src="../static/img/icons8-jeans-50.png" alt="jeans-icon" width="32" height="32">
+                    Брюки
+                </div>
+            </a>
+        </div>
+    </div>
+</section>
+
+<script src="../static/auth.js"></script>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<!--<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"-->
+<!--        integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"-->
+<!--        crossorigin="anonymous"></script>-->
+<!--<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"-->
+<!--        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"-->
+<!--        crossorigin="anonymous"></script>-->
+<!--<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"-->
+<!--        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"-->
+<!--        crossorigin="anonymous"></script>-->
+<!-- Flickity -->
+<!--<script src="js/flickity.pkgd.min.js"></script>-->
+
+</body>
+</html>
+

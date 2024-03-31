@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+{% block content %}
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../static/css/reset.css">
+    <link rel="stylesheet" type="text/css" href="../static/css/style.css">
+    <script src="https://kit.fontawesome.com/b9edfb7622.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.10/vue.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.5/axios.js"></script>
+    <title>Mix</title>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="container-fluid header-wrapper sticky-top">
+    <header class=" container-fluid container-lg">
+        <nav class="nav-flexbox flex-space-between-custom display-flex-custom flex-center-custom">
+            <div class="d-flex align-items-center flex-nowrap">
+                <div class="brand-logo display-flex-custom flex-center-custom">
+                    <div class="logo-img display-flex-custom flex-center-custom">
+                        <img class="logo-image" src="../static/img/MIX_LOGO3Зpng.png" alt="logo-img">
+                        <a class="nav-user-link flex-container"
+                           href="https://2gis.kz/almaty/inside/9430047375048660/firm/70000001050261708?m=76.910666%2C43.225079%2F16"
+                           target="_blank">
+                            <img src="../static/img/icons8-home-50.png" alt="home-icon" width="25" height="25">
+                            <span>&nbsp;Тимирязева 42 ТЦ Галерея</span>
+                        </a>
+                        <a class="nav-user-link phone-number flex-container" href="tel:+77017124804">
+                            <img src="../static/img/icons8-phone-50.png" alt="phone-icon" width="25" height="25">
+                            <span>&nbsp;8 701 712 48 04</span>
+                        </a>
+                    </div>
+                </div>
+
+
+            </div>
+            <div class="login-info flex-center-custom display-flex-custom d-none d-md-flex h-medium-font">
+                <a class="nav-hd-link h-medium-font text-nowrap" href="#">
+                    <i class="fas fa-shopping-cart fa-lg"></i>&nbsp;&nbsp;CART
+                </a>
+                <a class="nav-user-link" href="#">
+                    &nbsp;FirstName
+                </a>
+                <a class="nav-user-link" href="#">
+                    &nbsp;LastName
+                </a>
+                <img src="../static/img/user.png" alt="user-icon" width="35" height="35">
+            </div>
+        </nav>
+    </header>
+</div>
+
+<!-- MAIN SEARCH -->
+<main class="mb-4">
+    <div class="container-fluid search-div d-flex flex-column justify-content-center align-items-center">
+        <form class="form-search d-flex" action="search.html">
+            <input class="search-input" type="text" placeholder="What do you look for...">
+            <button class="button-search" type="submit">Search</button>
+        </form>
+    </div>
+</main>
+
+{% endblock content %}
+</body>
+</html>
