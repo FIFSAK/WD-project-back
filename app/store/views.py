@@ -1,10 +1,12 @@
+from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.response import Response
 from django.shortcuts import render
 from .models import *
 from rest_framework import viewsets, filters, permissions, status
-from .serializers import ClothesSerializer, UserSerializer, CartItemSerializer
+from .serializers import ClothesSerializer, UserSerializer, CartItemSerializer, SizeSerializer, TypeSerializer
 from django.contrib.auth.models import User
+from django.http import HttpResponse
 
 
 def index(request):
@@ -17,6 +19,7 @@ def search(request):
 
 def itemcart(request):
     return render(request, "cart.html")
+
 
 def userItems(request):
     return render(request, "userCart.html")
@@ -60,8 +63,7 @@ class UserView(viewsets.ReadOnlyModelViewSet):
 class UserRegister(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     queryset = User.objects.all();
-
-
+    http_method_names = ['post']
 
 
 class CartItemViewSet(viewsets.ModelViewSet):
@@ -106,3 +108,41 @@ class CartItemViewSet(viewsets.ModelViewSet):
         else:
             instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.user != request.user:
+            raise PermissionDenied("Вы не можете обновить этот элемент корзины.")
+        data = request.data.copy()
+        new_size = data.get('size')
+        new_quantity = data.get('quantity')
+        if new_size:
+            instance.size = new_size
+        if new_quantity:
+            if int(new_quantity) > instance.clothes.count:
+                raise PermissionDenied("Вы не можете добавить в корзину больше товаров, чем есть в наличии.")
+            instance.quantity = new_quantity
+        instance.save()
+
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+def size_view(request):
+    if request.method == 'GET':
+        queryset = Size.objects.all()
+        serializer = SizeSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    else:
+        return HttpResponse(status=405, reason='Method Not Allowed')
+
+
+def type_view(request):
+    if request.method == 'GET':
+        queryset = Type.objects.all()
+        serializer = TypeSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    else:
+        return HttpResponse(status=405, reason='Method Not Allowed')

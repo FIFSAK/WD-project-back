@@ -1,4 +1,4 @@
-from store.models import Clothes, CartItem
+from store.models import Clothes, CartItem, Size
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
@@ -54,4 +54,15 @@ class CartItemSerializer(serializers.ModelSerializer):
         cart_item = CartItem.objects.create(clothes=clothes, **validated_data)
         return cart_item
 
+
+class SizeSerializer(serializers.Serializer):
+    class Meta:
+        model = Size
+        fields = '__all__'
+
+
+class TypeSerializer(serializers.Serializer):
+    class Meta:
+        model = Clothes
+        fields = '__all__'
 
