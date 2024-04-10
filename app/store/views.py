@@ -1,5 +1,5 @@
 from rest_framework.decorators import api_view
-from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from rest_framework.response import Response
 from django.shortcuts import render
 from .models import *
@@ -74,27 +74,43 @@ class CartItemViewSet(viewsets.ModelViewSet):
         return CartItem.objects.filter(user=self.request.user).select_related('clothes')
 
     def create(self, *args, **kwargs):
-        data = self.request.data.copy()
-        clothes_id = data.get('clothes_id')  # Изменено здесь
-        size = data.get('size')
+        data = self.request.data
+        clothes_id = data.get('clothes_id')
+        size_str = data.get('size')  # Размер как строка
+        quantity = int(data.get('quantity', 1))
+
         try:
             clothes = Clothes.objects.get(id=clothes_id)
+            size = Size.objects.get(size=size_str)  # Поиск объекта Size по строковому значению размера
         except Clothes.DoesNotExist:
-            raise NotFound('Товар (одежда) с указанным ID не найден.')
+            raise NotFound('Товар с указанным ID не найден.')
+        except Size.DoesNotExist:
+            raise NotFound('Указанный размер не найден.')
 
-        existing_item = CartItem.objects.filter(
-            user=self.request.user, clothes=clothes
-        ).first()
+        # Пытаемся найти ClothesSize, который связывает выбранную одежду и размер
+        try:
+            clothes_size = ClothesSize.objects.get(clothes=clothes, size=size)
+            if clothes_size.quantity < quantity:
+                raise ValidationError('Недостаточно товара в наличии.')
+        except ClothesSize.DoesNotExist:
+            raise NotFound('Данный размер отсутствует для выбранной одежды.')
 
-        # Pass the user's primary key (pk) to the serializer
-        data['user'] = self.request.user.pk
-        serializer = self.get_serializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        if existing_item and size == existing_item.size:
-            existing_item.quantity += 1
-            existing_item.save(update_fields=['quantity'])
+        # Проверяем, есть ли уже такой товар с таким размером в корзине пользователя
+        existing_item = CartItem.objects.filter(user=self.request.user, clothes=clothes, size=size).first()
+
+        if existing_item:
+            # Если добавляемое количество не превышает доступное, обновляем количество
+            if existing_item.quantity + quantity <= clothes_size.quantity:
+                existing_item.quantity += quantity
+                existing_item.save(update_fields=['quantity'])
+            else:
+                raise ValidationError('Добавление данного количества превысит доступное количество товара в наличии.')
+            serializer = self.get_serializer(existing_item)
         else:
-            serializer.save()
+            # Если товара с таким размером нет в корзине, создаём новый элемент
+            new_item = CartItem.objects.create(user=self.request.user, clothes=clothes, size=size, quantity=quantity)
+            serializer = self.get_serializer(new_item)
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def destroy(self, request, *args, **kwargs):
@@ -113,18 +129,47 @@ class CartItemViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         if instance.user != request.user:
             raise PermissionDenied("Вы не можете обновить этот элемент корзины.")
-        data = request.data.copy()
-        new_size = data.get('size')
-        new_quantity = data.get('quantity')
-        if new_size:
-            instance.size = new_size
-        if new_quantity:
-            if int(new_quantity) > instance.clothes.count:
-                raise PermissionDenied("Вы не можете добавить в корзину больше товаров, чем есть в наличии.")
-            instance.quantity = new_quantity
-        instance.save()
 
-        serializer = self.get_serializer(instance)
+        data = request.data.copy()
+        new_size_str = data.get('size', None)
+        new_quantity = int(data.get('quantity', 1))
+        if new_size_str:
+            try:
+                new_size = Size.objects.get(size=new_size_str)
+                # Если размер указан, проверяем доступное количество для нового размера
+                clothes_size = ClothesSize.objects.filter(clothes=instance.clothes, size=new_size).first()
+                if not clothes_size or clothes_size.quantity < new_quantity:
+                    raise ValidationError("Недостаточно товара в наличии.")
+            except Size.DoesNotExist:
+                raise NotFound("Указанный размер не найден.")
+        else:
+            # Если размер не передан, предполагаем использование текущего размера для проверки количества
+            clothes_size = ClothesSize.objects.filter(clothes=instance.clothes, size=instance.size).first()
+            if clothes_size and clothes_size.quantity < new_quantity:
+                raise ValidationError("Недостаточно товара в наличии по текущему размеру.")
+
+        # Проверяем, есть ли уже в корзине такой товар с новым размером
+        existing_item = CartItem.objects.filter(user=request.user, clothes=instance.clothes, size=new_size).exclude(
+            id=instance.id).first()
+
+        if existing_item:
+            # Увеличиваем количество существующего элемента, если это возможно
+            total_quantity = existing_item.quantity + new_quantity
+            if total_quantity <= clothes_size.quantity:
+                existing_item.quantity = total_quantity
+                existing_item.save(update_fields=['quantity'])
+                instance.delete()  # Удаляем текущий элемент, т.к. его количество было перенесено
+            else:
+                raise ValidationError("Добавление данного количества превысит доступное количество товара в наличии.")
+        else:
+            # Если товара с таким размером нет, просто обновляем размер и количество текущего элемента
+            if new_size_str:
+                instance.size = new_size_str
+            if new_quantity:
+                instance.quantity = new_quantity
+            instance.save()
+
+        serializer = self.get_serializer(existing_item if existing_item else instance)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
