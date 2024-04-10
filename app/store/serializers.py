@@ -1,8 +1,16 @@
-from store.models import Clothes, CartItem, Size
+from store.models import Clothes, CartItem, Size, ClothesSize
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from rest_framework.exceptions import ValidationError
+
+
+class ClothesSizeSerializer(serializers.ModelSerializer):
+    size = serializers.SlugRelatedField(slug_field='size', read_only=True)
+
+    class Meta:
+        model = ClothesSize
+        fields = ('size', 'quantity')
 
 
 class ClothesSerializer(serializers.ModelSerializer):
@@ -10,10 +18,8 @@ class ClothesSerializer(serializers.ModelSerializer):
         read_only=True,
         slug_field='category_name'
     )
-    sizes = serializers.SlugRelatedField(
-        many=True,
-        read_only=True,
-        slug_field='size'
+    sizes = ClothesSizeSerializer(
+        source='clothes_sizes', many=True, read_only=True
     )
 
     class Meta:
@@ -65,4 +71,3 @@ class TypeSerializer(serializers.Serializer):
     class Meta:
         model = Clothes
         fields = '__all__'
-

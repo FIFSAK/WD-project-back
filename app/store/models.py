@@ -2,12 +2,11 @@ import boto3
 from django.db import models
 from django.contrib import admin
 from django.contrib.auth.models import User
-
 from app import settings
 
 
 class Size(models.Model):
-    size = models.CharField(max_length=10)
+    size = models.CharField(max_length=10, unique=True)
 
     def __str__(self):
         return self.size
@@ -26,8 +25,7 @@ class Clothes(models.Model):
     name = models.TextField()
     vendor_code = models.BigIntegerField()
     price = models.IntegerField()
-    count = models.IntegerField()
-    sizes = models.ManyToManyField(Size)
+    sizes = models.ManyToManyField(Size, through='ClothesSize')
 
     def delete(self, *args, **kwargs):
         # Connect to S3
@@ -41,20 +39,33 @@ class Clothes(models.Model):
         super(Clothes, self).delete(*args, **kwargs)
 
     def __str__(self):
-        return str(self.name) + " " + str(self.type_category )
+        return str(self.name) + " " + str(self.type_category)
 
 
-class ClothesAdmin(admin.ModelAdmin):
-    def delete_queryset(self, request, queryset):
-        for obj in queryset:
-            obj.delete()
+class ClothesSize(models.Model):
+    clothes = models.ForeignKey(Clothes, on_delete=models.CASCADE, related_name='clothes_sizes')
+    size = models.ForeignKey(Size, on_delete=models.CASCADE)
+    quantity = models.IntegerField(default=0)
 
+    def __str__(self):
+        return f"{self.clothes.name} - {self.size.size} - {self.quantity}"
 
 class CartItem(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     clothes = models.ForeignKey(Clothes, on_delete=models.CASCADE)
     quantity = models.IntegerField(default=1)
     size = models.CharField(max_length=100)
+
+class ClothesSizeInline(admin.TabularInline):
+    model = ClothesSize
+    extra = 1
+
+class ClothesAdmin(admin.ModelAdmin):
+    inlines = (ClothesSizeInline,)
+
+    def delete_queryset(self, request, queryset):
+        for obj in queryset:
+            obj.delete()
 #
 # class Trousers(Clothes):
 #
