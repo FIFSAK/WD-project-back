@@ -81,34 +81,35 @@ class CartItemViewSet(viewsets.ModelViewSet):
         data = self.request.data.copy()
         clothes_id = data.get('clothes_id')
         size_str = data.get('size')
+        quantity = int(data.get('quantity', 1))
 
-        # Получаем объект Clothes или возвращаем ошибку, если таковой не найден
+        # Получаем объекты Clothes и Size
         clothes = get_object_or_404(Clothes, id=clothes_id)
-
-        # Получаем объект Size, соответствующий переданной строке, или возвращаем ошибку, если таковой не найден
         size = get_object_or_404(Size, size=size_str)
 
-        # Проверяем, существует ли уже элемент в корзине с указанными товаром и размером
-        existing_item = CartItem.objects.filter(
-            user=self.request.user,
-            clothes=clothes,
-            size=size
-        ).first()
+        # Проверяем наличие товара указанного размера и его доступное количество
+        try:
+            clothes_size = ClothesSize.objects.get(clothes=clothes, size=size)
+            if clothes_size.quantity < quantity:
+                raise ValidationError('Недостаточно товара в наличии.')
+        except ClothesSize.DoesNotExist:
+            raise NotFound('Данный размер отсутствует для выбранной одежды.')
+
+        # Проверяем наличие товара с выбранным размером в корзине пользователя
+        existing_item = CartItem.objects.filter(user=self.request.user, clothes=clothes, size=size).first()
 
         if existing_item:
-            # Если такой элемент существует, увеличиваем его количество
-            existing_item.quantity += 1
-            existing_item.save(update_fields=['quantity'])
+            # Если товар уже есть в корзине, проверяем, можно ли увеличить его количество
+            if existing_item.quantity + quantity <= clothes_size.quantity:
+                existing_item.quantity += quantity
+                existing_item.save(update_fields=['quantity'])
+            else:
+                raise ValidationError('Добавление данного количества превысит доступное количество товара в наличии.')
             serializer = self.get_serializer(existing_item)
         else:
-            # Если такого элемента нет, создаем новый
-            data['user'] = self.request.user.pk
-            data['clothes'] = clothes.pk
-            data['size'] = size.pk  # Устанавливаем ForeignKey на объект Size
-            serializer = self.get_serializer(data=data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
+            # Если товара с таким размером нет в корзине, создаем новый элемент
+            new_item = CartItem.objects.create(user=self.request.user, clothes=clothes, size=size, quantity=quantity)
+            serializer = self.get_serializer(new_item)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -132,40 +133,41 @@ class CartItemViewSet(viewsets.ModelViewSet):
         data = request.data.copy()
         new_size_str = data.get('size', None)
         new_quantity = int(data.get('quantity', 1))
+        new_size = None
+
+        # Изначально берём текущий размер и количество instance
+        clothes_size = ClothesSize.objects.filter(clothes=instance.clothes, size=instance.size).first()
+        if not clothes_size or clothes_size.quantity < new_quantity:
+            raise ValidationError("Недостаточно товара в наличии по текущему размеру.")
+
         if new_size_str:
             try:
                 new_size = Size.objects.get(size=new_size_str)
-                # Если размер указан, проверяем доступное количество для нового размера
-                clothes_size = ClothesSize.objects.filter(clothes=instance.clothes, size=new_size).first()
-                if not clothes_size or clothes_size.quantity < new_quantity:
-                    raise ValidationError("Недостаточно товара в наличии.")
+                # Если новый размер отличается от текущего, обновляем clothes_size и задаём количество = 1
+                if instance.size != new_size:
+                    clothes_size = ClothesSize.objects.filter(clothes=instance.clothes, size=new_size).first()
+                    if not clothes_size:
+                        raise NotFound("Данный размер отсутствует для выбранной одежды.")
+                    if clothes_size.quantity < 1:
+                        raise ValidationError("Недостаточно товара в наличии.")
+                    new_quantity = 1  # Устанавливаем количество равным 1 для нового размера
             except Size.DoesNotExist:
                 raise NotFound("Указанный размер не найден.")
-        else:
-            # Если размер не передан, предполагаем использование текущего размера для проверки количества
-            clothes_size = ClothesSize.objects.filter(clothes=instance.clothes, size=instance.size).first()
-            if clothes_size and clothes_size.quantity < new_quantity:
-                raise ValidationError("Недостаточно товара в наличии по текущему размеру.")
 
-        # Проверяем, есть ли уже в корзине такой товар с новым размером
-        existing_item = CartItem.objects.filter(user=request.user, clothes=instance.clothes, size=new_size).exclude(
-            id=instance.id).first()
+        query = CartItem.objects.filter(user=request.user, clothes=instance.clothes, size=new_size or instance.size)
+        existing_item = query.exclude(id=instance.id).first()
 
         if existing_item:
-            # Увеличиваем количество существующего элемента, если это возможно
-            total_quantity = existing_item.quantity + new_quantity
-            if total_quantity <= clothes_size.quantity:
-                existing_item.quantity = total_quantity
+            if existing_item.quantity + new_quantity <= clothes_size.quantity:
+                existing_item.quantity += new_quantity
                 existing_item.save(update_fields=['quantity'])
-                instance.delete()  # Удаляем текущий элемент, т.к. его количество было перенесено
+                instance.delete()
             else:
                 raise ValidationError("Добавление данного количества превысит доступное количество товара в наличии.")
         else:
-            # Если товара с таким размером нет, просто обновляем размер и количество текущего элемента
-            if new_size_str:
-                instance.size = new_size_str
-            if new_quantity:
-                instance.quantity = new_quantity
+            if new_size:
+                instance.size = new_size
+            instance.quantity = new_quantity
             instance.save()
 
         serializer = self.get_serializer(existing_item if existing_item else instance)
