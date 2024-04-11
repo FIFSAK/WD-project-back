@@ -46,25 +46,36 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 
+class SizeSerializer(serializers.Serializer):
+    class Meta:
+        model = Size
+        fields = '__all__'
+
+
+class CartItemClothesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Clothes
+        exclude = ('sizes',)  # Исключаем поле sizes
+
+
 class CartItemSerializer(serializers.ModelSerializer):
-    clothes = ClothesSerializer(read_only=True)
+    clothes = CartItemClothesSerializer(read_only=True)  # Используем кастомный сериализатор
     clothes_id = serializers.IntegerField(write_only=True)
 
+    size = serializers.SlugRelatedField(
+        slug_field='size',
+        queryset=Size.objects.all()
+    )
     class Meta:
         model = CartItem
         fields = '__all__'
+
 
     def create(self, validated_data):
         clothes_id = validated_data.pop('clothes_id')
         clothes = Clothes.objects.get(id=clothes_id)
         cart_item = CartItem.objects.create(clothes=clothes, **validated_data)
         return cart_item
-
-
-class SizeSerializer(serializers.Serializer):
-    class Meta:
-        model = Size
-        fields = '__all__'
 
 
 class TypeSerializer(serializers.Serializer):

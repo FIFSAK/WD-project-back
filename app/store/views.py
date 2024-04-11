@@ -1,7 +1,7 @@
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from rest_framework.response import Response
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from .models import *
 from rest_framework import viewsets, filters, permissions, status
 from .serializers import ClothesSerializer, UserSerializer, CartItemSerializer, SizeSerializer, TypeSerializer
@@ -73,43 +73,42 @@ class CartItemViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return CartItem.objects.filter(user=self.request.user).select_related('clothes')
 
+    from django.shortcuts import get_object_or_404
+    from rest_framework.exceptions import ValidationError
+    from rest_framework.response import Response
+
     def create(self, *args, **kwargs):
-        data = self.request.data
+        data = self.request.data.copy()
         clothes_id = data.get('clothes_id')
-        size_str = data.get('size')  # Размер как строка
-        quantity = int(data.get('quantity', 1))
+        size_str = data.get('size')
 
-        try:
-            clothes = Clothes.objects.get(id=clothes_id)
-            size = Size.objects.get(size=size_str)  # Поиск объекта Size по строковому значению размера
-        except Clothes.DoesNotExist:
-            raise NotFound('Товар с указанным ID не найден.')
-        except Size.DoesNotExist:
-            raise NotFound('Указанный размер не найден.')
+        # Получаем объект Clothes или возвращаем ошибку, если таковой не найден
+        clothes = get_object_or_404(Clothes, id=clothes_id)
 
-        # Пытаемся найти ClothesSize, который связывает выбранную одежду и размер
-        try:
-            clothes_size = ClothesSize.objects.get(clothes=clothes, size=size)
-            if clothes_size.quantity < quantity:
-                raise ValidationError('Недостаточно товара в наличии.')
-        except ClothesSize.DoesNotExist:
-            raise NotFound('Данный размер отсутствует для выбранной одежды.')
+        # Получаем объект Size, соответствующий переданной строке, или возвращаем ошибку, если таковой не найден
+        size = get_object_or_404(Size, size=size_str)
 
-        # Проверяем, есть ли уже такой товар с таким размером в корзине пользователя
-        existing_item = CartItem.objects.filter(user=self.request.user, clothes=clothes, size=size).first()
+        # Проверяем, существует ли уже элемент в корзине с указанными товаром и размером
+        existing_item = CartItem.objects.filter(
+            user=self.request.user,
+            clothes=clothes,
+            size=size
+        ).first()
 
         if existing_item:
-            # Если добавляемое количество не превышает доступное, обновляем количество
-            if existing_item.quantity + quantity <= clothes_size.quantity:
-                existing_item.quantity += quantity
-                existing_item.save(update_fields=['quantity'])
-            else:
-                raise ValidationError('Добавление данного количества превысит доступное количество товара в наличии.')
+            # Если такой элемент существует, увеличиваем его количество
+            existing_item.quantity += 1
+            existing_item.save(update_fields=['quantity'])
             serializer = self.get_serializer(existing_item)
         else:
-            # Если товара с таким размером нет в корзине, создаём новый элемент
-            new_item = CartItem.objects.create(user=self.request.user, clothes=clothes, size=size, quantity=quantity)
-            serializer = self.get_serializer(new_item)
+            # Если такого элемента нет, создаем новый
+            data['user'] = self.request.user.pk
+            data['clothes'] = clothes.pk
+            data['size'] = size.pk  # Устанавливаем ForeignKey на объект Size
+            serializer = self.get_serializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 

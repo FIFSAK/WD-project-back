@@ -50,15 +50,18 @@ class ClothesSize(models.Model):
     def __str__(self):
         return f"{self.clothes.name} - {self.size.size} - {self.quantity}"
 
+
 class CartItem(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     clothes = models.ForeignKey(Clothes, on_delete=models.CASCADE)
     quantity = models.IntegerField(default=1)
-    size = models.CharField(max_length=100)
+    size = models.ForeignKey(Size, on_delete=models.CASCADE, related_name='cartItem_size')
+
 
 class ClothesSizeInline(admin.TabularInline):
     model = ClothesSize
     extra = 1
+
 
 class ClothesAdmin(admin.ModelAdmin):
     inlines = (ClothesSizeInline,)
