@@ -1,7 +1,7 @@
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.response import Response
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from .models import *
 from rest_framework import viewsets, filters, permissions, status
 from .serializers import ClothesSerializer, UserSerializer, CartItemSerializer, SizeSerializer, TypeSerializer
@@ -73,28 +73,42 @@ class CartItemViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return CartItem.objects.filter(user=self.request.user).select_related('clothes')
 
+    from django.shortcuts import get_object_or_404
+    from rest_framework.exceptions import ValidationError
+    from rest_framework.response import Response
+
     def create(self, *args, **kwargs):
         data = self.request.data.copy()
-        clothes_id = data.get('clothes_id')  # Изменено здесь
-        size = data.get('size')
-        try:
-            clothes = Clothes.objects.get(id=clothes_id)
-        except Clothes.DoesNotExist:
-            raise NotFound('Товар (одежда) с указанным ID не найден.')
+        clothes_id = data.get('clothes_id')
+        size_str = data.get('size')
 
+        # Получаем объект Clothes или возвращаем ошибку, если таковой не найден
+        clothes = get_object_or_404(Clothes, id=clothes_id)
+
+        # Получаем объект Size, соответствующий переданной строке, или возвращаем ошибку, если таковой не найден
+        size = get_object_or_404(Size, size=size_str)
+
+        # Проверяем, существует ли уже элемент в корзине с указанными товаром и размером
         existing_item = CartItem.objects.filter(
-            user=self.request.user, clothes=clothes
+            user=self.request.user,
+            clothes=clothes,
+            size=size
         ).first()
 
-        # Pass the user's primary key (pk) to the serializer
-        data['user'] = self.request.user.pk
-        serializer = self.get_serializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        if existing_item and size == existing_item.size:
+        if existing_item:
+            # Если такой элемент существует, увеличиваем его количество
             existing_item.quantity += 1
             existing_item.save(update_fields=['quantity'])
+            serializer = self.get_serializer(existing_item)
         else:
+            # Если такого элемента нет, создаем новый
+            data['user'] = self.request.user.pk
+            data['clothes'] = clothes.pk
+            data['size'] = size.pk  # Устанавливаем ForeignKey на объект Size
+            serializer = self.get_serializer(data=data)
+            serializer.is_valid(raise_exception=True)
             serializer.save()
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def destroy(self, request, *args, **kwargs):
