@@ -53,9 +53,18 @@ class SizeSerializer(serializers.Serializer):
 
 
 class CartItemClothesSerializer(serializers.ModelSerializer):
+    type_category = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='category_name'
+    )
+    sizes = ClothesSizeSerializer(
+        source='clothes_sizes', many=True, read_only=True
+    )
+
     class Meta:
         model = Clothes
-        exclude = ('sizes',)  # Исключаем поле sizes
+        fields = '__all__'
+        # exclude = ('sizes',)  # Исключаем поле sizes
 
 
 class CartItemSerializer(serializers.ModelSerializer):
