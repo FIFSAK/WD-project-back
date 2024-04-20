@@ -19,13 +19,9 @@ class Type(models.Model):
         return self.category_name
 
 
-class Clothes(models.Model):
-    type_category = models.ForeignKey(Type, on_delete=models.CASCADE)
+class Image(models.Model):
     image = models.ImageField(upload_to='images/', null=True)
-    name = models.TextField()
-    vendor_code = models.BigIntegerField()
-    price = models.IntegerField()
-    sizes = models.ManyToManyField(Size, through='ClothesSize')
+
 
     def delete(self, *args, **kwargs):
         # Connect to S3
@@ -36,7 +32,26 @@ class Clothes(models.Model):
         # Delete the file from S3
         if self.image:
             s3.delete_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=self.image.name)
-        super(Clothes, self).delete(*args, **kwargs)
+        super().delete(*args, **kwargs)
+
+class Clothes(models.Model):
+    type_category = models.ForeignKey(Type, on_delete=models.CASCADE)
+    images = models.ManyToManyField(Image, null=True)
+    name = models.TextField()
+    vendor_code = models.BigIntegerField()
+    price = models.IntegerField()
+    sizes = models.ManyToManyField(Size, through='ClothesSize')
+
+    # def delete(self, *args, **kwargs):
+    #     # Connect to S3
+    #     s3 = boto3.client('s3',
+    #                       aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+    #                       aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
+    #
+    #     # Delete the file from S3
+    #     if self.image:
+    #         s3.delete_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=self.image.name)
+    #     super(Clothes, self).delete(*args, **kwargs)
 
     def __str__(self):
         return str(self.name) + " " + str(self.type_category)

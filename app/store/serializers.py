@@ -1,4 +1,4 @@
-from store.models import Clothes, CartItem, Size, ClothesSize
+from store.models import Clothes, CartItem, Size, ClothesSize, Image
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
@@ -13,6 +13,12 @@ class ClothesSizeSerializer(serializers.ModelSerializer):
         fields = ('size', 'quantity')
 
 
+class ImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Image
+        fields = ('image',)
+
+
 class ClothesSerializer(serializers.ModelSerializer):
     type_category = serializers.SlugRelatedField(
         read_only=True,
@@ -20,6 +26,9 @@ class ClothesSerializer(serializers.ModelSerializer):
     )
     sizes = ClothesSizeSerializer(
         source='clothes_sizes', many=True, read_only=True
+    )
+    images = ImageSerializer(
+        many=True, read_only=True
     )
 
     class Meta:
@@ -61,6 +70,10 @@ class CartItemClothesSerializer(serializers.ModelSerializer):
         source='clothes_sizes', many=True, read_only=True
     )
 
+    images = ImageSerializer(
+        many=True, read_only=True
+    )
+
     class Meta:
         model = Clothes
         fields = '__all__'
@@ -75,10 +88,10 @@ class CartItemSerializer(serializers.ModelSerializer):
         slug_field='size',
         queryset=Size.objects.all()
     )
+
     class Meta:
         model = CartItem
         fields = '__all__'
-
 
     def create(self, validated_data):
         clothes_id = validated_data.pop('clothes_id')
