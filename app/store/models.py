@@ -22,7 +22,6 @@ class Type(models.Model):
 class Image(models.Model):
     image = models.ImageField(upload_to='images/', null=True)
 
-
     def delete(self, *args, **kwargs):
         # Connect to S3
         s3 = boto3.client('s3',
@@ -34,9 +33,10 @@ class Image(models.Model):
             s3.delete_object(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=self.image.name)
         super().delete(*args, **kwargs)
 
+
 class Clothes(models.Model):
     type_category = models.ForeignKey(Type, on_delete=models.CASCADE)
-    images = models.ManyToManyField(Image, null=True)
+    images = models.ManyToManyField(Image)
     name = models.TextField()
     vendor_code = models.BigIntegerField()
     price = models.IntegerField()
